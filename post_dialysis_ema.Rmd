@@ -25,8 +25,9 @@ pds <- read_csv(here::here("pds_alltimepoints.csv"))
 ```
 
 
-### **(Table 1[n=156 pts])** 
+# **(Table 1[n=156 pts])** 
 
+## {.tabset .tabset-fade .tabset-pills}
 ```{r}
 post_dial_baseline <- pds |>
   mutate(dialysis_duration =
@@ -43,7 +44,7 @@ post_dial_baseline <- pds |>
          betablocker_use)
 ```
 
-#### Table 1
+### Table 1
 ```{r}
 post_dial_baseline |>
   tbl_summary(
@@ -56,7 +57,7 @@ post_dial_baseline |>
     bold_labels()
 ```
 
-#### Supplemental table 1
+### Supplemental table 1
 ```{r}
 post_dial_baseline |>
   tbl_summary(
@@ -157,78 +158,9 @@ pds |>
 
 ### **Mixed graphs**
 
-#### Alert/Cognitive and Positive Mood
 
-```{r, fig.align='center', fig.width=12, fig.height=4}
-daily_dialysis_changes |>
-  rename(`Dialysis day flag` = dialysis_day_flag) |>
-  mutate(`Dialysis day flag` = case_when(`Dialysis day flag` == "dialysis_day" ~ "Dialysis day",
-                                         `Dialysis day flag` == "not_dialysis_day" ~ "Non-dialysis day")) %>%
-  filter(`Composite score` %in% c("Alert/Cognitive", "Positive Mood")) |>
-  select(- c(diff, Min, Max)) |>
-  ggplot() +
-  geom_point(aes(x = dialysis_order_cont, y = Mean), 
-             size = 2) +
-  geom_path(aes(x = dialysis_order_cont, y = Mean, 
-                group = `Composite score`, linetype = `Composite score`)) +
-  labs(x = "Day", y = "Mean") +
-  theme_pubr() +
-  theme(legend.position = "top", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11, angle = 25)) +
-  geom_text(aes(x = dialysis_order_cont, y = Mean,label = round(Mean, 2)), vjust = - 1, hjust = -0.1, size = 4) +
-  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), labels = c("Day 1 (HD)",
-                                                                 "Day 2 (Non-HD)",
-                                                                 "Day 3 (HD)",
-                                                                 "Day 4 (Non-HD)",
-                                                                 "Day 5 (HD)", 
-                                                                 "Day 6 (Non-HD)",
-                                                                 "Day 7 (Non-HD)")) +
-  scale_y_continuous(limits = c(4, 5.5)) +
-  geom_vline(xintercept = c(1, 2, 3, 4, 5, 6, 7), linetype = "dashed", color = "blue")
-```
 
-#### Alert/Cognitive and Positive Mood using all time points
-```{r, fig.align='center', fig.width=12, fig.height=4}
-
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(4.8, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-                                                                 "Day 2 (Non-HD)",
-                                                                 "Day 3 (HD)",
-                                                                 "Day 4 (Non-HD)",
-                                                                 "Day 5 (HD)", 
-                                                                 "Day 6 (Non-HD)",
-                                                                 "Day 7 (Non-HD)")
-)
-
-posmood_alertcog_trend <- diurnal_daily_dialysis |>
-  filter(`Composite score` %in% c("Alert/Cognitive", "Positive Mood")) |>
-  ggplot(aes(x = sequential_time_order, y = Mean)) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Composite score`, linetype = `Composite score`)) +
-  labs(x = "Time of day", y = "Mean (Composite Score)") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(4, 5.4)) +
-  geom_text(aes(label = round(Mean, 2)), vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = 5.4, label = label), size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("dashed", "solid")) # specifying line types
-posmood_alertcog_trend
-
-ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
-```
-
-#### Alert/Cognitive and Positive Mood using all time points-Post dial
+#### Figure 2
 ```{r, fig.align='center', fig.width=12, fig.height=4}
 # Create a data frame for the labels
 labels_df <- data.frame(
@@ -246,7 +178,7 @@ labels_df <- data.frame(
   group = rep("`Symptom Domain`", 7)
 )
 
-diurnal_daily_dialysis_post_dial_ci <- post_dial |>
+diurnal_daily_dialysis_post_dial_ci <- pds |>
     filter(dialysis_order != "NA") |>
     group_by(sequential_time_order) |>
     summarise(across(`Negative Mood`:`Alert/Cognitive`, 
@@ -257,8 +189,8 @@ diurnal_daily_dialysis_post_dial_ci <- post_dial |>
                  names_to = c("Symptom Domain", ".value"), 
                  names_pattern = "(.*)_(.*)") |>
     mutate(
-           lower_ci = mean - qt(0.975, df = sum(!is.na(post_dial$`Negative Mood`)) - 1) * sem,
-           upper_ci = mean + qt(0.975, df = sum(!is.na(post_dial$`Negative Mood`)) - 1) * sem
+           lower_ci = mean - qt(0.975, df = sum(!is.na(pds$`Negative Mood`)) - 1) * sem,
+           upper_ci = mean + qt(0.975, df = sum(!is.na(pds$`Negative Mood`)) - 1) * sem
     ) |>
     ungroup()
 
@@ -290,286 +222,7 @@ posmood_alertcog_trend_post_dial
 #ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
 ```
 
-#### Alert Cognition using all time points-Post dial by shift
-```{r, fig.align='center', fig.width=12, fig.height=4}
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(7, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-            "Day 2 (Non-HD)",
-            "Day 3 (HD)",
-            "Day 4 (Non-HD)",
-            "Day 5 (HD)", 
-            "Day 6 (Non-HD)",
-            "Day 7 (Non-HD)"),
-  y_min = rep(7, 7),
-  y_max = rep(7, 7),
-  group = rep("`Dialysis Shift`", 7)
-)
-
-diurnal_daily_dialysis_post_dial_ci_byshift <- post_dial |>
-  filter(dialysis_order != "NA") |>
-  mutate(`Dialysis Shift` = ifelse(`Dialysis Shift` == "Evening", 
-                                   "Midday", `Dialysis Shift`)) |>
-  group_by(sequential_time_order, `Dialysis Shift`) |>
-  summarise(across(`Negative Mood`:`Alert/Cognitive`, 
-                   list(mean = ~mean(.x, na.rm = TRUE), 
-                        sem = ~sd(.x, na.rm = TRUE) / sqrt(sum(!is.na(.x)))), 
-                   .names = "{.col}_{.fn}")) |>
-  pivot_longer(cols = `Negative Mood_mean`:`Alert/Cognitive_sem`, 
-               names_to = c("Symptom Domain", ".value"), 
-               names_pattern = "(.*)_(.*)") |>
-  mutate(
-    lower_ci = mean - qt(0.975, df = sum(!is.na(post_dial$`Negative Mood`)) - 1) * sem,
-    upper_ci = mean + qt(0.975, df = sum(!is.na(post_dial$`Negative Mood`)) - 1) * sem
-  ) |>
-  ungroup()
-
-
-alert_cognition_post_dial_byshift <- diurnal_daily_dialysis_post_dial_ci_byshift |>
-  filter(`Symptom Domain` %in% c("Alert/Cognitive")) |>
-  ggplot(aes(x = sequential_time_order, y = mean, ymin=lower_ci, ymax=upper_ci, 
-             group=`Dialysis Shift`)) +
-  geom_ribbon(aes(fill=`Dialysis Shift`),alpha = .2) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Dialysis Shift`, linetype = `Dialysis Shift`)) +
-  labs(x = "Time of day", y = "Mean Alert Cognition Score") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(3, 7)) +
-  geom_text(aes(label = format(round(mean, digits=1), nsmall = 1) ), 
-            vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = y, label = label, ymin=y_min, 
-                                   ymax=y_max, group = group), 
-             size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("solid", "dashed")) 
-
-alert_cognition_post_dial_byshift
-#ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
-```
-
-#### Positive mood using all time points-Post dial by shift
-```{r, fig.align='center', fig.width=12, fig.height=4}
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(6, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-            "Day 2 (Non-HD)",
-            "Day 3 (HD)",
-            "Day 4 (Non-HD)",
-            "Day 5 (HD)", 
-            "Day 6 (Non-HD)",
-            "Day 7 (Non-HD)"),
-  y_min = rep(7, 7),
-  y_max = rep(7, 7),
-  group = rep("`Dialysis Shift`", 7)
-)
-
-positive_mood_trend_post_dial_byshift <- diurnal_daily_dialysis_post_dial_ci_byshift |>
-  filter(`Symptom Domain` %in% c("Positive Mood")) |>
-  ggplot(aes(x = sequential_time_order, y = mean, ymin=lower_ci, ymax=upper_ci, 
-             group=`Dialysis Shift`)) +
-  geom_ribbon(aes(fill=`Dialysis Shift`),alpha = .2) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Dialysis Shift`, linetype = `Dialysis Shift`)) +
-  labs(x = "Time of day", y = "Mean Positive Mood Score") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(2, 6)) +
-  geom_text(aes(label = format(round(mean, digits=1), nsmall = 1) ), 
-            vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = y, label = label, ymin=y_min, 
-                                   ymax=y_max, group = group), 
-             size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("solid", "dashed")) 
-
-positive_mood_trend_post_dial_byshift
-#ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
-```
-
-#### Negative mood using all time points-Post dial by shift
-```{r, fig.align='center', fig.width=12, fig.height=4}
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(5.2, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-            "Day 2 (Non-HD)",
-            "Day 3 (HD)",
-            "Day 4 (Non-HD)",
-            "Day 5 (HD)", 
-            "Day 6 (Non-HD)",
-            "Day 7 (Non-HD)"),
-  y_min = rep(7, 7),
-  y_max = rep(7, 7),
-  group = rep("`Dialysis Shift`", 7)
-)
-
-negative_mood_post_dial_byshift <- diurnal_daily_dialysis_post_dial_ci_byshift |>
-  filter(`Symptom Domain` %in% c("Negative Mood")) |>
-  ggplot(aes(x = sequential_time_order, y = mean, ymin=lower_ci, ymax=upper_ci, 
-             group=`Dialysis Shift`)) +
-  geom_ribbon(aes(fill=`Dialysis Shift`),alpha = .2) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Dialysis Shift`, linetype = `Dialysis Shift`)) +
-  labs(x = "Time of day", y = "Mean Negative Mood Score") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(0, 5.3)) +
-  geom_text(aes(label = format(round(mean, digits=1), nsmall = 1) ), 
-            vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = y, label = label, ymin=y_min, 
-                                   ymax=y_max, group = group), 
-             size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("solid", "dashed")) 
-
-negative_mood_post_dial_byshift
-#ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
-```
-
-#### Sleepiness/Fatigue using all time points-Post dial by shift
-```{r, fig.align='center', fig.width=12, fig.height=4}
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(7.8, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-            "Day 2 (Non-HD)",
-            "Day 3 (HD)",
-            "Day 4 (Non-HD)",
-            "Day 5 (HD)", 
-            "Day 6 (Non-HD)",
-            "Day 7 (Non-HD)"),
-  y_min = rep(7, 7),
-  y_max = rep(7, 7),
-  group = rep("`Dialysis Shift`", 7)
-)
-
-sleepiness_fatigue_post_dial_byshift <- diurnal_daily_dialysis_post_dial_ci_byshift |>
-  filter(`Symptom Domain` %in% c("Sleepiness/Fatigue")) |>
-  ggplot(aes(x = sequential_time_order, y = mean, ymin=lower_ci, ymax=upper_ci, 
-             group=`Dialysis Shift`)) +
-  geom_ribbon(aes(fill=`Dialysis Shift`),alpha = .2) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Dialysis Shift`, linetype = `Dialysis Shift`)) +
-  labs(x = "Time of day", y = "Mean Sleepiness/Fatigue Score") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(0, 7.8)) +
-  geom_text(aes(label = format(round(mean, digits=1), nsmall = 1) ), 
-            vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = y, label = label, ymin=y_min, 
-                                   ymax=y_max, group = group), 
-             size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("solid", "dashed")) 
-
-sleepiness_fatigue_post_dial_byshift
-#ggsave(here("ema/output/posmood_alertcog_trend.png"), posmood_alertcog_trend, width=12, height=6)
-```
-
-
-#### Sleepiness/Fatigue and Negative Mood
-
-```{r, fig.align='center', fig.width=12, fig.height=4}
-daily_dialysis_changes |>
-  rename(`Dialysis day flag` = dialysis_day_flag) |>
-  mutate(`Dialysis day flag` = case_when(`Dialysis day flag` == "dialysis_day" ~ "Dialysis day",
-                                         `Dialysis day flag` == "not_dialysis_day" ~ "Non-dialysis day")) %>%
-  filter(!(`Composite score` %in% c("Alert/Cognitive", "Positive Mood"))) |>
-  select(- c(diff, Min, Max)) |>
-  ggplot() +
-  geom_point(aes(x = dialysis_order_cont, y = Mean), 
-             size = 2) +
-  geom_path(aes(x = dialysis_order_cont, y = Mean, 
-                group = `Composite score`, linetype = `Composite score`)) +
-  labs(x = "Day", y = "Mean") +
-  theme_pubr() +
-  theme(legend.position = "top", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11, angle = 25)) +
-  geom_text(aes(x = dialysis_order_cont, y = Mean,label = round(Mean, 2)), vjust = - 1, hjust = -0.1, size = 4) +
-  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), labels = c("Day 1 (HD)",
-                                                                 "Day 2 (Non-HD)",
-                                                                 "Day 3 (HD)",
-                                                                 "Day 4 (Non-HD)",
-                                                                 "Day 5 (HD)", 
-                                                                 "Day 6 (Non-HD)",
-                                                                 "Day 7 (Non-HD)")) +
-  scale_y_continuous(limits = c(2, 4.5)) +
-  geom_vline(xintercept = c(1, 2, 3, 4, 5, 6, 7), linetype = "dashed", color = "blue")
-```
-
-#### Sleepiness/Fatigue and Negative Mood using all time points
-```{r, fig.align='center', fig.width=12, fig.height=4}
-
-# Create a data frame for the labels
-labels_df <- data.frame(
-  x = c(2, 6, 10, 14, 18, 22, 26),  # X-coordinates for each day
-  y = rep(4.8, 7),                    # Y-coordinate for all labels
-  label = c("Day 1 (HD)",
-            "Day 2 (Non-HD)",
-            "Day 3 (HD)",
-            "Day 4 (Non-HD)",
-            "Day 5 (HD)", 
-            "Day 6 (Non-HD)",
-            "Day 7 (Non-HD)")
-)
-
-negmood_sleepfat_trend <- diurnal_daily_dialysis |>
-  filter(`Composite score` %in% c("Negative Mood", "Sleepiness/Fatigue")) |>
-  ggplot(aes(x = sequential_time_order, y = Mean)) +
-  geom_point(size = 2) +
-  geom_path(aes(group = `Composite score`, linetype = `Composite score`)) +
-  labs(x = "Time of day", y = "Mean (Composite Score)") +
-  theme_pubr() +
-  theme(legend.position = "bottom", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11)) +
-  geom_vline(xintercept = c(4, 8, 12, 16, 20, 24, 28), linetype = "dashed", color = "blue") +
-  scale_x_continuous(breaks = seq(1:28),
-                     label = rep(c("1", "2", "3", "4"), 7)) +
-  scale_y_continuous(limits = c(2, 4.8)) +
-  geom_text(aes(label = round(Mean, 2)), vjust = - 1, hjust = -0.1, size = 4) +
-  geom_label(data = labels_df, aes(x = x, y = y, label = label), size = 4, 
-             fill = "white", color = "black", label.padding = unit(0.25, "lines"),
-             label.r = unit(0.2, "lines"), label.size = 0.25) +
-  scale_linetype_manual(values = c("solid", "dashed"))
-
-negmood_sleepfat_trend
-ggsave(here("ema/output/negmood_sleepfat_trend.png"), negmood_sleepfat_trend, width=12, height=6)
-```
-
-#### Sleepiness/Fatigue and Negative Mood using all time points-Post dial
+#### Figure 1
 ```{r, fig.align='center', fig.width=12, fig.height=4}
 # Create a data frame for the labels
 labels_df <- data.frame(
@@ -614,45 +267,12 @@ negmood_sleepfat_trend_post_dial
 # ggsave(here("ema/output/negmood_sleepfat_trend.png"), negmood_sleepfat_trend, width=12, height=6)
 ```
 
-#### All together by day of the week
-
-```{r, fig.align='center', fig.width=12, fig.height=4}
-all_symptoms_together <- daily_dialysis_changes |>
-  rename(`Dialysis day flag` = dialysis_day_flag) |>
-  mutate(`Dialysis day flag` = case_when(`Dialysis day flag` == "dialysis_day" ~ "Dialysis day",
-                                         `Dialysis day flag` == "not_dialysis_day" ~ "Non-dialysis day")) %>%
-  #filter(`Composite score` %in% c("Alert/Cognitive", "Positive Mood")) |>
-  select(- c(diff, Min, Max)) |>
-  ggplot() +
-  geom_point(aes(x = dialysis_order_cont, y = Mean), 
-             size = 2) +
-  geom_path(aes(x = dialysis_order_cont, y = Mean, 
-                group = `Composite score`, color = `Composite score`)) +
-  labs(x = "Day", y = "Mean") +
-  theme_pubr() +
-  theme(legend.position = "top", 
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(hjust = 1, size = 11, angle = 25)) +
-  geom_text(aes(x = dialysis_order_cont, y = Mean,label = round(Mean, 2)), vjust = - 1, hjust = -0.1, size = 4) +
-  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), labels = c("Day 1 (HD)",
-                                                                 "Day 2 (Non-HD)",
-                                                                 "Day 3 (HD)",
-                                                                 "Day 4 (Non-HD)",
-                                                                 "Day 5 (HD)", 
-                                                                 "Day 6 (Non-HD)",
-                                                                 "Day 7 (Non-HD)")) +
-  scale_y_continuous(limits = c(2.3, 5.2), breaks = seq(2, 5.25, by = 0.5) ) +
-  geom_vline(xintercept = c(1, 2, 3, 4, 5, 6, 7), linetype = "dashed", color = "blue")
-
-all_symptoms_together
-```
-
 
 # **Item level analysis**
 
 ## {.tabset}
 
-### Unadjusted Analysis- Supplemental table 2
+### Supplemental table 2
 
 ```{r}
 library(lme4)
@@ -700,7 +320,7 @@ ys <- c("`Negative Mood`", "anxious", "stressed", "tense", "sad", "irritable",
         "`Alert/Cognitive`", "forgetful", "clear_headed", "concentrated", "effort", "alert")
 
 fits_unadj <- ys |>
-  map(~ fit_unadjMod(post_dial, .))
+  map(~ fit_unadjMod(pds, .))
 
 names(fits_unadj) <- ys
 
@@ -730,10 +350,8 @@ diff_in_mean_unadj <- mean_diff_unadj |>
   select(y, contrast,estimate, p.value, conf.low : conf.high)
 
 diff_in_mean_unadj |>
-  DT::datatable(rownames = FALSE, options = list(pageLength = 5, scrollX = TRUE))
+  DT::datatable(rownames = FALSE, options = list(pageLength = 15, scrollX = TRUE))
 ```
-
-
 
 ### Adjusted Analysis
 
@@ -756,7 +374,7 @@ ys <- c("`Negative Mood`", "anxious", "stressed", "tense", "sad", "irritable",
         "`Alert/Cognitive`", "forgetful", "clear_headed", "concentrated", "effort", "alert")
 
 fits <- ys |>
-  map(~ fitMod(post_dial, .))
+  map(~ fitMod(pds, .))
 
 names(fits) <- ys
 
@@ -791,7 +409,7 @@ diff_in_mean <- mean_diff |>
   select(y, contrast,estimate, p.value, conf.low : conf.high)
 ```
 
-#### Forest plot
+#### Figure 3
 
 ```{r}
 pred_by_dia <- pred %>% 
@@ -853,10 +471,10 @@ pos_p <- forestploter::forest(pos_df[,c(1, 7:10)],
 library(gridExtra)
 
 forest_p <- grid.arrange(neg_p, pos_p, ncol=1)
-ggsave(here("ema/output/forestplot.png"), forest_p, width=10, height=4)
+#ggsave(here("ema/output/forestplot.png"), forest_p, width=10, height=4)
 ```
 
-#### Overall model p-values
+#### Table 2
 ```{r}
 f <- factor(c("anxious", "stressed", "tense", "sad", "irritable", "fatigued", "sleepy", "exhausted",
         "relaxed", "energetic", "calm", "happy", "efficent", "forgetful", "clear_headed", 
@@ -865,7 +483,7 @@ f <- factor(c("anxious", "stressed", "tense", "sad", "irritable", "fatigued", "s
         "relaxed", "energetic", "calm", "happy", "efficent", "forgetful", "clear_headed", 
         "concentrated", "effort", "alert"))
 
-post_dial |> 
+pds |> 
   pivot_longer(cols = c("anxious", "stressed", "tense", "sad", "irritable", "fatigued", "sleepy", "exhausted",
         "relaxed", "energetic", "calm", "happy", "efficent", "forgetful", "clear_headed", 
         "concentrated", "effort", "alert"), names_to = "CompositeScore") |>
@@ -885,64 +503,7 @@ post_dial |>
 
 ```{r}
 # pds stands for post-dialysis syndrome
-post_dial_exacerbation_diff <- post_dial |>
-  pivot_longer(cols = c(`Alert/Cognitive`, `Positive Mood`, `Negative Mood`, `Sleepiness/Fatigue`), 
-               names_to = "CompositeScore", values_to = "CompositeScore_values") |>
-  group_by(id, dialysis_non_first_second, CompositeScore) |>
-  summarise(mean = mean(CompositeScore_values, na.rm = TRUE)) |>
-  pivot_wider(names_from = c(dialysis_non_first_second), values_from = mean) |>
-  mutate(diff = `Dialysis days` - `Non-dialysis days`) |>
-  select(- c(`Dialysis days`, `Non-dialysis days`)) |>
-  pivot_wider(names_from = CompositeScore, values_from = diff) |>
-  ungroup() |>
-  left_join(demog |> select(id, hb, albumin), by = "id") |>
-  left_join(meds |> select(id, opioid_use, antidep_use)) 
-
-pds <- post_dial_exacerbation_diff |> 
-  left_join(df_bl_comp |> 
-              distinct(id, .keep_all = TRUE) |>
-              mutate(dialysis_duration = 
-                     strtoi(as.difftime(seconds_to_period(dialysis_stop_time-dialysis_start_time)))/3600) |>
-              select(id, screen_age, vintage_yrs, charlson_tot, vintage_yrs, gender, race,
-                     `Dialysis Shift`, dialysis_sched, dialysis_duration), by = "id") |>
-  left_join(ktv, by = "id") %>%
-  left_join(cardio_diab, by = "id") %>%
-  left_join(antihypertension_betablocker_use, by = 'id') |>
-  filter(!is.na(`Alert/Cognitive`), !is.na(opioid_use)) |>
-  mutate(`Alert/Cognitive_tertiles` = cut(`Alert/Cognitive`, breaks = 3, include.lowest = TRUE),
-         `Positive Mood_tertiles` = cut(`Positive Mood`, breaks = 3, include.lowest = TRUE),
-         `Negative Mood_tertiles` = cut(`Negative Mood`, breaks = 3, include.lowest = TRUE),
-         `Sleepiness/Fatigue_tertiles` = cut(`Sleepiness/Fatigue`, breaks = 3, include.lowest = TRUE)) |>
-  left_join(sdi |> select(id, sdi_score), by = 'id') |>
-  mutate("Sleepines/fatigue_diff" = case_when(
-    `Sleepiness/Fatigue` >= 1  ~ "Yes",
-    `Sleepiness/Fatigue` <1 ~ "No"
-  ) ) |>
-  rowwise() |>
-  mutate("Sleepiness/Fatigue/NegativeMood" = (`Sleepiness/Fatigue` + `Negative Mood`),
-         "Alert_Cognitive_Positivemood" = (`Alert/Cognitive` + `Positive Mood`)) |>
-  ungroup() |> 
-  mutate("Sleepiness/Fatigue/NegativeMood_flag" = case_when(
-    `Sleepiness/Fatigue/NegativeMood` >= 1  ~ "Yes",
-    `Sleepiness/Fatigue/NegativeMood` <1 ~ "No"
-  ),
-  "Alert_Cognitive_Positivemood_flag" = case_when(
-    `Alert_Cognitive_Positivemood` >= 1  ~ "Yes",
-    `Alert_Cognitive_Positivemood` <1 ~ "No"
-  )) |> 
-  left_join(symptoms_bl, by = "id")
-```
-
-```{r}
-# pds stands for post-dialysis syndrome
-pds_alltimepoints <- post_dial |>
-  left_join(demog |> select(id, hb, albumin), by = "id") |>
-  left_join(meds |> select(id, opioid_use, antidep_use)) |>
-  left_join(ktv, by = "id") |>
-  #left_join(cardio_diab, by = "id") |>
-  left_join(antihypertension_betablocker_use, by = 'id') |>
-  left_join(sdi |> select(id, sdi_score), by = 'id') |>
-  left_join(symptoms_bl |> select(-c(site, randgrp_f, date, time, Timepoint)), by = "id") |>
+pds_alltimepoints <- pds |>
   mutate(dialysis_duration = strtoi(as.difftime(seconds_to_period(dialysis_stop_time-dialysis_start_time)))/3600) |>
   rowwise() |>
   mutate("Sleepiness/Fatigue/NegativeMood" = (`Sleepiness/Fatigue` + `Negative Mood`),
@@ -961,256 +522,8 @@ pds_alltimepoints <- post_dial |>
                                                  "Day 1")) 
 ```
 
-### Total scores
-```{r}
-total_score <- post_dial |>
-  pivot_longer(cols = c(`Alert/Cognitive`, `Positive Mood`, `Negative Mood`, `Sleepiness/Fatigue`), 
-                 names_to = "CompositeScore", values_to = "CompositeScore_values") |>
-  group_by(id, dialysis_non_first_second, CompositeScore) |>
-  summarise(mean = mean(CompositeScore_values, na.rm = TRUE)) |>
-  pivot_wider(names_from = c(dialysis_non_first_second), values_from = mean) |>
-  filter(CompositeScore %in% c('Sleepiness/Fatigue', 'Negative Mood')) |>
-  pivot_wider(names_from = CompositeScore, values_from = c(`Dialysis days`, `Non-dialysis days`)) |>
-  mutate(post_dialysis_days_excacerbation = `Dialysis days_Negative Mood` + `Dialysis days_Sleepiness/Fatigue`,
-         non_dialysis_days_excacerbation = `Non-dialysis days_Negative Mood` + `Non-dialysis days_Sleepiness/Fatigue`,
-         five_percent_increase = non_dialysis_days_excacerbation * 1.05,
-         flag = ifelse(post_dialysis_days_excacerbation > five_percent_increase, "Yes", "No")) 
-```
 
-
-
-### Tertiles
-
-#### Alert/Cognitive
-```{r}
-pds |>
-  select(screen_age, vintage_yrs, charlson_tot, vintage_yrs, gender, race, `Alert/Cognitive_tertiles`) |>
-  ungroup() |>
-  tbl_summary(
-  by = `Alert/Cognitive_tertiles`,
-  statistic = list(all_continuous() ~ "{mean} ({sd})",
-                   all_categorical() ~ "{n} ({p}%)"),
-  digits = all_continuous() ~ 1,
-  missing_text = "(Missing)"
-) %>%
-  add_p() %>%
-  modify_header(label = "**Variable**") %>%
-  bold_labels()
-```
-
-#### Positive Mood
-```{r}
-pds |>
-  select(screen_age, vintage_yrs, charlson_tot, vintage_yrs, gender, race, `Positive Mood_tertiles`) |>
-  ungroup() |>
-  tbl_summary(
-  by = `Positive Mood_tertiles`,
-  statistic = list(all_continuous() ~ "{mean} ({sd})",
-                   all_categorical() ~ "{n} ({p}%)"),
-  digits = all_continuous() ~ 1,
-  missing_text = "(Missing)"
-) %>%
-  add_p() %>%
-  modify_header(label = "**Variable**") %>%
-  bold_labels()
-```
-
-#### Negative Mood
-```{r}
-pds |>
-  select(screen_age, vintage_yrs, charlson_tot, vintage_yrs, gender, race, `Negative Mood_tertiles`) |>
-  ungroup() |>
-  tbl_summary(
-  by = `Negative Mood_tertiles`,
-  statistic = list(all_continuous() ~ "{mean} ({sd})",
-                   all_categorical() ~ "{n} ({p}%)"),
-  digits = all_continuous() ~ 1,
-  missing_text = "(Missing)"
-) %>%
-  add_p() %>%
-  modify_header(label = "**Variable**") %>%
-  bold_labels()
-```
-
-#### Sleepiness/Fatigue
-```{r}
-pds |>
-  select(screen_age, vintage_yrs, charlson_tot, vintage_yrs, gender, race, `Sleepiness/Fatigue_tertiles`,
-         albumin, hb, antidep_use, opioid_use, paTotal_imp) |>
-  ungroup() |>
-  tbl_summary(
-  by = `Sleepiness/Fatigue_tertiles`,
-  statistic = list(all_continuous() ~ "{mean} ({sd})",
-                   all_categorical() ~ "{n} ({p}%)"),
-  digits = all_continuous() ~ 1,
-  missing_text = "(Missing)"
-) %>%
-  add_p() %>%
-  modify_header(label = "**Variable**") %>%
-  bold_labels()
-
-d <- pds |>
-  mutate("Sleepines/fatigue_diff" = case_when(
-    `Sleepiness/Fatigue` >= 1  ~ "Yes",
-    `Sleepiness/Fatigue` <1 ~ "No"
-  ) ) |>
-  rowwise() |>
-  mutate("Sleepiness/Fatigue/NegativeMood" = (`Sleepiness/Fatigue` + `Negative Mood`),
-         "Alert_Cognitive_Positivemood" = (`Alert/Cognitive` + `Positive Mood`)) |>
-  ungroup() |> 
-  mutate("Sleepiness/Fatigue/NegativeMood_flag" = case_when(
-    `Sleepiness/Fatigue/NegativeMood` >= 1  ~ "Yes",
-    `Sleepiness/Fatigue/NegativeMood` <1 ~ "No"
-  ),
-  "Alert_Cognitive_Positivemood_flag" = case_when(
-    `Alert_Cognitive_Positivemood` >= 1  ~ "Yes",
-    `Alert_Cognitive_Positivemood` <1 ~ "No"
-  )) |> 
-  left_join(symptoms_bl, by = "id")
-```
-
-```{r}
-pds |>
-    select(c(hb : race, `Sleepiness/Fatigue/NegativeMood_flag`, dep_imp : fs_imp, psqi_imp : ssTotal_imp)) |>
-    ungroup() |>
-    tbl_summary(
-        by = `Sleepiness/Fatigue/NegativeMood_flag`,
-        statistic = list(all_continuous() ~ "{mean} ({sd})",
-                         all_categorical() ~ "{n} ({p}%)"),
-        digits = all_continuous() ~ 1,
-        missing_text = "(Missing)"
-    ) %>%
-    add_p() %>%
-    modify_header(label = "**Variable**") %>%
-    bold_labels()
-```
-
-### Variables distribution
-```{r}
-pds |> 
-  select(screen_age, gender, race, charlson_tot, vintage_yrs, hb,
-         albumin, opioid_use, antidep_use, fs_imp, psqi_imp, 
-         bpi_imp, dep_imp, gad_imp, ssTotal_imp, paTotal_imp, sdi_score, 
-         `Dialysis Shift`, dialysis_sched, dialysis_duration, ktv) |>
-tbl_summary(
-        statistic = list(all_continuous() ~ "{mean} ({sd})",
-                         all_categorical() ~ "{n} ({p}%)"),
-        digits = all_continuous() ~ 1,
-        missing_text = "(Missing)"
-    ) %>%
-    modify_header(label = "**Variable**") %>%
-    bold_labels()
-```
-
-### Excacerbation by dialysis shift
-
-
-#### Pairwise comparisons
-
-```{r}
-library(lme4)
-library(broom)
-library(broom.mixed)
-library(marginaleffects)
-library(ggpubr)
-library(lmerTest)
-
-fitMod <- function(df, y) {
-
-model_formula <- as.formula(glue::glue("{y} ~ 1 + `Dialysis Shift` + (1 |id)"))
-  
-  fitted_model <- lmer(model_formula, data = df, control = lmerControl(optimizer ='bobyqa'))
-  
-  return(fitted_model)
-}
-
-
-adjMod <- function(ftmdl){
-  a <- comparisons(ftmdl,
-                   newdata="marginalmeans",
-                   variables= 'Dialysis Shift'
-                   ) %>% 
-    tidy()
-  a
-}
-
-```
-
-```{r}
-# create a list of the outcome variables
-ys <- c("`Sleepiness/Fatigue/NegativeMood`")
-
-fits <- ys |>
-  map(~ fitMod(pds_alltimepoints, .))
-
-names(fits) <- ys
-
-# Get the differences in means
-mean_diff <- fits %>% 
-  map_dfr(~adjMod(.x)
-          ,.id="y"
-          ) |>
-  mutate(p.value = round(p.value, 3))
-
-# Get the predicted means
-# predicted_means <- fits %>% 
-#   map_dfr(~predPopMod(.x,tm=c(1,2,3,4))
-#           ,.id="y"
-#           ) %>% 
-#   mutate(Outcome=as.factor(y))
-get_overall_p <- function(fits){
-  anova(fits) %>% 
-    tidy() %>% 
-    select(p.value)
-}
-
-```
-
-```{r}
-mean_diff |>
-  select(y, contrast, estimate, p.value, conf.low : conf.high) |>
-  mykable(n.left = 2) 
-```
-
-
-### Unadjusted analyses using linear regression
-```{r, include = FALSE}
-# create a list of all bivariate combinations of outcome and independent variables
-outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
-ind_vars_bin <- c("screen_age", "gender", "race", "charlson_tot", "vintage_yrs", "hb",
-                  "albumin", "opioid_use", "antidep_use", "fs_imp", "psqi_imp", 
-                  "bpi_imp", "dep_imp", "gad_imp", "ssTotal_imp", "paTotal_imp", "sdi_score",
-                  "`Dialysis Shift`", "dialysis_sched", "dialysis_duration", "ktv",
-                  "cva_yn", "cpd_yn", "diabetes_wo_damage", "antihypertension_use", "betablocker_use")
-
-pds_cleaned <- pds %>% mutate(opioid_use = as.factor(opioid_use),
-                              antidep_use = as.factor(antidep_use))
-
-var_combinations_bin <- expand.grid(outcome_vars, ind_vars_bin)
-
-# 
-# create a list of linear models for each combination and name the list elements
-model_list <- setNames(
-  map2(var_combinations_bin$Var1, var_combinations_bin$Var2, function(outcome_var, ind_var) {
-    lm(as.formula(paste(outcome_var, "~", ind_var)), data = pds_cleaned)
-  }),
-  paste(var_combinations_bin$Var1, var_combinations_bin$Var2, sep = "  vs.  ")
-)
-
-# summarize the models using tidy() and store the results in a list
-tidy_list <- map(model_list, ~tidy(.x, conf.int = TRUE))
-
-# combine the summary results into a single data frame
-summary_df <- bind_rows(tidy_list, .id = "model name") |>
-  mutate(across(where(is.numeric), ~ round(., 3))) |>
-  filter(term != "(Intercept)") |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(`model name`, term, `Estimate of Interest`, `p.value`)
-
-DT::datatable(summary_df, options = list(pageLength = 20))
-```
-
-### Unadjusted analyses using mixed-effect model
+### Unadjusted analyses using mixed-effect model(Supplemental table 3)
 ```{r}
 # create a list of all bivariate combinations of outcome and independent variables
 outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
@@ -1250,22 +563,7 @@ summary_df <- bind_rows(tidy_list, .id = "model name") |>
 DT::datatable(summary_df, options = list(pageLength = 20))
 ```
 
-### Adjusted analyses- Linear regression (Using CCI)
 
-Age, gender, race, and cci
-```{r, include = FALSE}
-fit_controllers <- lm(data = pds, `Sleepiness/Fatigue/NegativeMood` ~ screen_age + gender + race + charlson_tot)
-
-fit_controllers_results <- fit_controllers |> 
-  tidy(conf.int = T) |> 
-  filter(term != c("(Intercept)")) |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(term, `Estimate of Interest`, p.value) 
-
-kable(fit_controllers_results)
-           
-```
 
 ```{r, include = FALSE}
 outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
@@ -1302,22 +600,6 @@ DT::datatable(output, options = list(pageLength = 20))
   
 ```
 
-### Adjusted analyses- Linear regression (cvd, copd, and diabetes)
-
-Age, gender, race,cvd, copd, and diabetes 
-```{r, include = FALSE}
-fit_controllers <- lm(data = pds, `Sleepiness/Fatigue/NegativeMood` ~ screen_age + gender + race + cva_yn + cpd_yn + diabetes_wo_damage)
-
-fit_controllers_results <- fit_controllers |> 
-  tidy(conf.int = T) |> 
-  filter(term != c("(Intercept)")) |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(term, `Estimate of Interest`, p.value) 
-
-kable(fit_controllers_results)
-           
-```
 
 ```{r, include = FALSE}
 outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
@@ -1354,7 +636,7 @@ DT::datatable(output, options = list(pageLength = 20))
   
 ```
 
-### Adjusted analyses- mixed-effect model (Using CCI) 
+### Table 3
 
 Age, gender, race, and cci
 ```{r}
@@ -1411,352 +693,3 @@ output <- bind_rows(tidy_list, .id = "model name") |>
 DT::datatable(output, options = list(pageLength = 20))
   
 ```
-
-### Adjusted analyses- mixed-effect model (Using CCI) adjusting for facit fatigue
-
-Age, gender, race, and cci
-```{r}
-fit_controllers_mixed_model <- lmer(data = pds_alltimepoints, `Sleepiness/Fatigue/NegativeMood` ~ (screen_age + gender + race + charlson_tot + fs_imp) * dialysis_non_first_second + (1 | id))
-
-fit_controllers_mixed_model_results <- fit_controllers_mixed_model |> 
-  tidy(conf.int = T) |> 
-  filter(str_detect(term, ":")) |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(term, `Estimate of Interest`, p.value) 
-
-kable(fit_controllers_mixed_model_results)
-```
-
-```{r}
-outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
-ind_vars_bin <- c("vintage_yrs", "hb",
-                  "albumin", "opioid_use", "antidep_use", "fs_imp", "psqi_imp", 
-                  "bpi_imp", "dep_imp", "gad_imp", "ssTotal_imp", "paTotal_imp", "sdi_score",
-                  "`Dialysis Shift`", "dialysis_sched", "dialysis_duration", "ktv",
-                  "cva_yn", "cpd_yn", "diabetes_wo_damage", "antihypertension_use", 
-                  "betablocker_use", "dialysis_order_collapsed")
-
-pds_cleaned <- pds_alltimepoints %>% mutate(opioid_use = as.factor(opioid_use),
-                              antidep_use = as.factor(antidep_use))
-
-var_combinations_bin <- expand.grid(outcome_vars, ind_vars_bin)
-
-# create a list of linear models for each combination and name the list elements
-model_list <- setNames(
-  map2(var_combinations_bin$Var1, var_combinations_bin$Var2, function(outcome_var, ind_var) {
-    lmer(as.formula(paste(outcome_var, "~", "(" ,"screen_age + gender + race + charlson_tot + fs_imp", "+", ind_var,
-                          ") * dialysis_non_first_second + (1 | id)")), data = pds_cleaned)
-  }),
-  paste(var_combinations_bin$Var1, var_combinations_bin$Var2, sep = "  vs.  ")
-)
-
-# summarize the models using tidy() and store the results in a list
-tidy_list <- map(model_list, ~tidy(.x, conf.int = TRUE))
-
-output <- bind_rows(tidy_list, .id = "model name") |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  filter(str_detect(term, ":")) |>
-  filter(! (str_starts(term, "screen_age:"))) |>
-  filter(! (str_starts(term, "genderMale:"))) |>
-  filter(! (str_starts(term, "raceOthers:"))) |>
-  filter(! (str_starts(term, "raceWhite:"))) |>
-  filter(! (str_starts(term, "charlson_tot:"))) |>
-  filter(! (str_starts(term, "fs_imp:"))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(`model name`, term, `Estimate of Interest`, `p.value`)
-
-DT::datatable(output, options = list(pageLength = 20))
-  
-```
-
-### Adjusted analyses- mixed-effect model (cvd, copd, and diabetes)
-
-Age, gender, race, cvd, copd, and diabetes
-```{r, include = FALSE}
-fit_controllers_mixed_model <- lmer(data = pds_alltimepoints, `Sleepiness/Fatigue/NegativeMood` ~ (screen_age + gender + race + cva_yn + cpd_yn + diabetes_wo_damage) * dialysis_non_first_second + (1 | id))
-
-fit_controllers_mixed_model_results <- fit_controllers_mixed_model |> 
-  tidy(conf.int = T) |> 
-  filter(str_detect(term, ":")) |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(term, `Estimate of Interest`, p.value) 
-
-kable(fit_controllers_mixed_model_results)
-```
-
-```{r, include = FALSE}
-outcome_vars <- c("`Sleepiness/Fatigue/NegativeMood`")
-ind_vars_bin <- c("vintage_yrs", "hb",
-                  "albumin", "opioid_use", "antidep_use", "fs_imp", "psqi_imp", 
-                  "bpi_imp", "dep_imp", "gad_imp", "ssTotal_imp", "paTotal_imp", "sdi_score",
-                  "`Dialysis Shift`", "dialysis_sched", "dialysis_duration", "ktv",
-                  "antihypertension_use", "betablocker_use")
-
-pds_cleaned <- pds_alltimepoints %>% mutate(opioid_use = as.factor(opioid_use),
-                              antidep_use = as.factor(antidep_use))
-
-var_combinations_bin <- expand.grid(outcome_vars, ind_vars_bin)
-
-# create a list of linear models for each combination and name the list elements
-model_list <- setNames(
-  map2(var_combinations_bin$Var1, var_combinations_bin$Var2, function(outcome_var, ind_var) {
-    lmer(as.formula(paste(outcome_var, "~", "(" ,"screen_age + gender + race + cva_yn + cpd_yn + diabetes_wo_damage", "+", ind_var,
-                          ") * dialysis_non_first_second + (1 | id)")), data = pds_cleaned)
-  }),
-  paste(var_combinations_bin$Var1, var_combinations_bin$Var2, sep = "  vs.  ")
-)
-
-# summarize the models using tidy() and store the results in a list
-tidy_list <- map(model_list, ~tidy(.x, conf.int = TRUE))
-
-output <- bind_rows(tidy_list, .id = "model name") |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  filter(str_detect(term, ":")) |>
-  filter(! (str_starts(term, "screen_age:"))) |>
-  filter(! (str_starts(term, "genderMale:"))) |>
-  filter(! (str_starts(term, "raceOthers:"))) |>
-  filter(! (str_starts(term, "raceWhite:"))) |>
-  filter(! (str_starts(term, "cva_yn1:"))) |>
-  filter(! (str_starts(term, "cpd_yn1:"))) |>
-  filter(! (str_starts(term, "diabetes_wo_damage1:"))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(`model name`, term, `Estimate of Interest`, `p.value`)
-
-DT::datatable(output, options = list(pageLength = 20))
-  
-```
-
-# Total symptoms analyses
-
-## {.tabset .tabset-fade .tabset-pills}
-
-### Adjusted analyses- mixed-effect model (Using CCI) adjusting for facit fatigue
-
-Age, gender, race, and cci
-```{r}
-fit_controllers_mixed_model <- lmer(data = pds_alltimepoints, total_symptoms_score ~ (screen_age + gender + race + charlson_tot + fs_imp) * dialysis_non_first_second + (1 | id))
-
-fit_controllers_mixed_model_results <- fit_controllers_mixed_model |> 
-  tidy(conf.int = T) |> 
-  filter(str_detect(term, ":")) |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(term, `Estimate of Interest`, p.value) 
-
-kable(fit_controllers_mixed_model_results)
-```
-
-```{r}
-outcome_vars <- c("total_symptoms_score")
-ind_vars_bin <- c("vintage_yrs", "hb",
-                  "albumin", "opioid_use", "antidep_use", "fs_imp", "psqi_imp", 
-                  "bpi_imp", "dep_imp", "gad_imp", "ssTotal_imp", "paTotal_imp", "sdi_score",
-                  "`Dialysis Shift`", "dialysis_sched", "dialysis_duration", "ktv",
-                  "cva_yn", "cpd_yn", "diabetes_wo_damage", "antihypertension_use", 
-                  "betablocker_use", "dialysis_order_collapsed")
-
-pds_cleaned <- pds_alltimepoints %>% mutate(opioid_use = as.factor(opioid_use),
-                              antidep_use = as.factor(antidep_use))
-
-var_combinations_bin <- expand.grid(outcome_vars, ind_vars_bin)
-
-# create a list of linear models for each combination and name the list elements
-model_list <- setNames(
-  map2(var_combinations_bin$Var1, var_combinations_bin$Var2, function(outcome_var, ind_var) {
-    lmer(as.formula(paste(outcome_var, "~", "(" ,"screen_age + gender + race + charlson_tot + fs_imp", "+", ind_var,
-                          ") * dialysis_non_first_second + (1 | id)")), data = pds_cleaned)
-  }),
-  paste(var_combinations_bin$Var1, var_combinations_bin$Var2, sep = "  vs.  ")
-)
-
-# summarize the models using tidy() and store the results in a list
-tidy_list <- map(model_list, ~tidy(.x, conf.int = TRUE))
-
-output <- bind_rows(tidy_list, .id = "model name") |>
-  mutate(across(where(is.numeric), ~ round(., 4))) |>
-  filter(str_detect(term, ":")) |>
-  filter(! (str_starts(term, "screen_age:"))) |>
-  filter(! (str_starts(term, "genderMale:"))) |>
-  filter(! (str_starts(term, "raceOthers:"))) |>
-  filter(! (str_starts(term, "raceWhite:"))) |>
-  filter(! (str_starts(term, "charlson_tot:"))) |>
-  filter(! (str_starts(term, "fs_imp:"))) |>
-  mutate(`Estimate of Interest`= glue::glue('{estimate} ({conf.low}, {conf.high})')) |>
-  select(`model name`, term, `Estimate of Interest`, `p.value`)
-
-DT::datatable(output, options = list(pageLength = 20))
-  
-```
-
-### Difference in total symptoms score (dial vs. non-dialysis days)
-
-```{r}
-diff_avg_symptoms <- pds_alltimepoints |> 
-  group_by(id, dialysis_non_first_second) |> 
-  summarise(mean_total_scores = mean(total_symptoms_score, na.rm = T)) |>
-  pivot_wider(names_from = dialysis_non_first_second, values_from = mean_total_scores) |>
-  mutate(diff_dial_non_dial = `Dialysis days` - `Non-dialysis days`)
-
-summary(diff_avg_symptoms$diff_dial_non_dial)
-```
-
-
-# Mark's comment
-
-## pcs
-```{r}
-pds |> 
-  group_by(`Sleepiness/Fatigue/NegativeMood_flag`) |> 
-  summarise(mean(pcs, na.rm = T))
-```
-```{r}
-ggplot(data = pds, aes(x= `Sleepiness/Fatigue/NegativeMood_flag`, 
-                       y= pcs,
-                       color = `Sleepiness/Fatigue/NegativeMood_flag`)) + 
-  geom_boxplot()
-```
-```{r}
-t.test(pds$pcs ~ pds$`Sleepiness/Fatigue/NegativeMood_flag`)
-```
-
-
-## mcs
-```{r}
-pds |> 
-  group_by(`Sleepiness/Fatigue/NegativeMood_flag`) |> 
-  summarise(mean(mcs, na.rm = T))
-```
-
-```{r}
-ggplot(data = pds, aes(x= `Sleepiness/Fatigue/NegativeMood_flag`, 
-                       y= mcs,
-                       color = `Sleepiness/Fatigue/NegativeMood_flag`)) + 
-  geom_boxplot()
-```
-
-```{r}
-t.test(pds$mcs ~ pds$`Sleepiness/Fatigue/NegativeMood_flag`)
-```
-
-
-
-
-
-# **output for manuscript**
-
-## {.tabset .tabset-fade .tabset-pills}
-
-### Symptom domain trends (Sleepiness/Fatigue and Negative Mood)
-
-```{r, fig.width=12, fig.height=4}
-negmood_sleepfat_trend_post_dial
-```
-
-### Symptom domain trends (Aler Cognition and Positive Mood)
-```{r, fig.width=12, fig.height=4}
-posmood_alertcog_trend_post_dial
-```
-
-### Symptoms domain by shift
-
-#### Alert/Cognitive
-```{r, fig.width=12, fig.height=4}
-alert_cognition_post_dial_byshift
-```
-
-#### Positive Mood
-```{r, fig.width=12, fig.height=4}
-positive_mood_trend_post_dial_byshift
-```
-
-#### Negative Mood
-```{r, fig.width=12, fig.height=4}
-negative_mood_post_dial_byshift
-```
-
-#### Sleepiness/Fatigue
-```{r, fig.width=12, fig.height=4}
-sleepiness_fatigue_post_dial_byshift
-```
-
-### Average Sleepiness/Fatigue by time of the day
-```{r}
-df_bl_comp |> 
-  group_by(timeofday) |> 
-  summarise(avg_sleepiness_fatigue = mean(`Sleepiness/Fatigue`, na.rm = T)) |>
-  mutate(across(where(is.numeric), ~ round(., 2))) |>
-  kable()
-```
-
-
-```{r}
-# library(officer);library(rvg)
-# # # # export to power point
-# officer::read_pptx() %>%
-#         # add slide ----
-# officer::add_slide() %>%
-#         # specify object and location of object ----
-# officer::ph_with(rvg::dml(ggobj = posmood_alertcog_trend_post_dial)
-#                  , ph_location(width = 10, height = 6, left = 0.5, top = 1)
-# ) %>%
-#         # export slide -----
-# base::print(
-#         target = here::here(
-#                 "posmood_alertcog_trend_post_dial.pptx"
-#         )
-# )
-```
-
-```{r}
-# This data set will be publicly shared with journals for publication purposes. Only fields that were used in the analyses will be in this data set
-
-# Select the columns that will be shared
-df_bl_comp_shared <- df_bl_comp |>
-  left_join(demog |> select(id, hispanic, hb, albumin), by = "id") |>
-  
-  mutate(`Ethnic Group` = ifelse(hispanic == 1, "Hispanic", "Not-Hispanic")) |>
-  select(id, randgrp_f, day, timeofday, screen_age, gender, race, `Ethnic Group`, 
-         hb, albumin, charlson_tot,vintage_yrs,
-         alert : dialysis_non_first_second) |>
-  left_join(sdi |> select(id, sdi_score), by = "id") |>
-  left_join(meds |> select(id, opioid_use, antidep_use), by = "id") |>
-  left_join(ktv, by = 'id') |> 
-  left_join(symptoms_bl |> select(id, dep_imp : paTotal_imp), by = "id") |>
-  select( - c(bl_symptom))
-
-# create dictionary for df_bl_comp_shared data set
-dict <- data.frame(
-  `variable name` = names(df_bl_comp_shared),
-  `variable definition` = c("Patient Unique Identifier", "Randomization Group", "Contact Day Number such that 1: first day of contact, etc", "Time of Day such that 1: Morning,
-            2: Afternoon, 3: Late Afternoon, 4: Evening", "Patient's Age", "Patient's Gender", "Patient's Race", 
-            "Patient's Ethnic Group", "Hemoglobin", "Albumin", "Charlson Comorbidity Index", "Dialysis Vintage (Years)",
-            "Symptom Score (How ALERT, do you feel, right now?)", "Symptom Score (How WEARY do you feel, right now?)", 
-            "Symptom Score (How ANXIOUS do you feel, right now?)", "Symptom Score (How STRESSED do you feel, right now?)",
-            "Symptom Score (How TENSE do you feel, right now?)", "Symptom Score (How SAD do you feel, right now?)", 
-            "Symptom Score (How IRRITABLE do you feel, right now?)", "Symptom Score (How RELAXED do you feel, right now?)",
-            "Symptom Score (How ENERGETIC do you feel, right now?)", "Symptom Score (How CALM do you feel, right now?)",
-            "Symptom Score (How HAPPY do you feel, right now?)", "Symptom Score (How EFFICENT do you feel, right now?)",
-            "Symptom Score (How FORGETFUL do you feel, right now?)", "Symptom Score (How CLEAR HEADED do you feel, right now?)",
-            "Symptom Score (How FATIGUED do you feel, right now?)", "Symptom Score (How SLEEPY do you feel, right now?)", 
-            "Symptom Score (How EXHAUSTED do you feel, right now?)", "Symptom Score (Selecting any number from One to Seven, with One being, NOT AT ALL ABLE TO CONCENTRATE, to Seven, being COMPLETELY ABLE TO CONCENTRATE. )", "Symptom Score (Selecting any number from One to Seven, with One being, NO EFFORT, to Seven, being GREAT EFFORT.)", "Dialysis Schedule Monday/Wednesday/Friday or Tuesday/Thursday/Saturday",
-            "Dialysis Start Time", "Dialysis Stop Time", "Call Start Time", "Call Stop Time", "Call Day of the Week",
-            "Dialysis or Non-Dialysis Day Flag", "Evaluation Time (Before Dialysis, During, or After Dialysis",
-            "Negative Mood Composite Score", "Sleepiness/Fatigue Composite Score", "Positive Mood Composite Score",
-            "Alert/Cognitive Composite Score", "Dialysis Shift (Morning, Midday, Evening)", "Dialysis Order (1-7)",
-            "Sequential Time Order (1-28)", "Dialysis Order Continuous (1-7)", "Dialysis/Non-Dialysis Day Flag",
-            "Social Deprivation Index Score", "Opioid Use", "Antidepressant Use", "Dialysis Adequacy", "Beck Depression Inventory II", 
-            "Brief Pain Inventory-Short Form", "Functional Assessment of Chronic Illness Therapy-Fatigue", 
-            "Pittsburgh Sleep Quality Index", "General Anxiety Disorder-7", 
-            "Multidimensional Scale of Perceived Social Support", "Physical Activity Scale for the Elderly"),
-  `variable type` = c(rep("original", 37), rep("derived", 11), rep("original", 11)))
-
-            
-            
-taccare_list_data <- list(datat = df_bl_comp_shared, data_dictionary = dict)
-# write the data set to an excel file and move it to the separate folder that is called #taccare_public_data_sharing
-#writexl::write_xlsx(taccare_list_data, here("TACcare.xlsx"))
-
-```
-
