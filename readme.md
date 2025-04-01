@@ -1,7 +1,9 @@
 ## Postdialysis Fatigue in Patients with Kidney Failure; secondary analyses of TACcare study EMA data
 
+Link to manuscript: [Using Ecological Momentary Assessment to Redefine Postdialysis Fatigue in Patients with Kidney Failure](https://journals.lww.com/jasn/fulltext/9900/using_ecological_momentary_assessment_to_redefine.570.aspx)
+
 |  |  |
-|------------------------------------|-------------------------------------------------------|
+|-----------------------------|-------------------------------------------|
 | Protocol Title/number | Using Ecological Momentary Assessment to Redefine Postdialysis Fatigue in Patients with Kidney Failure |
 | Grant Number | R01DK114085-01 |
 | Brief Statement of Purpose of Study | To utilize ecological momentary assessment (EMA) to examine post-HD patient-centered outcomes. |
